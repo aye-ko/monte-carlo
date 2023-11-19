@@ -1,0 +1,70 @@
+import random
+
+class Computer:
+    def __init__(self, infected, p):
+        self.infected = infected
+        self.p = p
+
+def create_network(network_size, p):
+    return [Computer(False, p) for _ in range(network_size)]
+
+def initial_infection(network, num_infect):
+    for i in range(min(num_infect, len(network))):
+        network[i].infected = True
+
+def simulate(network, num_days, max_repair):
+    days_to_eradicate = 0
+    total_infected = 0
+    infected_at_least_once_this_trial = [False] * len(network)
+
+    while any(comp.infected for comp in network) and days_to_eradicate < num_days:
+        days_to_eradicate += 1
+        for i, comp in enumerate(network):
+            if comp.infected:
+                for j, other_comp in enumerate(network):
+                    if not other_comp.infected and random.random() < other_comp.p:
+                        other_comp.infected = True
+                        infected_at_least_once_this_trial[j] = True
+        total_infected += sum(comp.infected for comp in network)
+
+        infected_indices = [i for i, comp in enumerate(network) if comp.infected]
+        random.shuffle(infected_indices)
+        for i in infected_indices[:max_repair]:
+            network[i].infected = False
+    infected_this_trial = sum(comp.infected for comp in network)
+    return days_to_eradicate, total_infected, infected_at_least_once_this_trial
+
+def run_monte_carlo(num_trials, network_size, p, num_infect, num_days, max_repair):
+    total_days = 0
+    total_infected_per_trial = 0
+    infected_at_least_once_counts = [0] * network_size
+
+    for _ in range(num_trials):
+        network = create_network(network_size, p)
+        initial_infection(network, num_infect)
+        days, infected_this_trial, infected_once_this_trial = simulate(network, num_days, max_repair)
+        total_days += days
+        total_infected_per_trial += infected_this_trial
+        for index, was_infected in enumerate(infected_once_this_trial):
+            infected_at_least_once_counts[index] += was_infected
+
+    avg_days_to_eradicate = total_days / num_trials
+    avg_infected_per_trial = total_infected_per_trial / num_trials
+    prob_infected_at_least_once = [count / num_trials for count in infected_at_least_once_counts]
+
+    return avg_days_to_eradicate, avg_infected_per_trial, prob_infected_at_least_once
+
+
+# Parameters
+num_trials = 10000
+network_size = 20
+p = 0.1
+num_infect = 1
+num_days = 10
+max_repair = 5
+
+# Run Monte Carlo Simulation
+avg_days_to_eradicate, avg_infected_per_trial, prob_infected_once = run_monte_carlo(num_trials, network_size, p, num_infect, num_days, max_repair)
+print(f"Average time to remove the virus: {avg_days_to_eradicate} days")
+print(f"Average number of computers infected per trial: {avg_infected_per_trial}")
+print("Probability of each computer getting infected at least once:", prob_infected_once)
