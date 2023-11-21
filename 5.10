@@ -44,7 +44,7 @@ def run_monte_carlo(num_trials, network_size, p, num_infect, num_days, max_repai
         initial_infection(network, num_infect)
         days, infected_this_trial, infected_once_this_trial = simulate(network, num_days, max_repair)
         total_days += days
-        total_infected_per_trial += infected_this_trial
+        total_infected_per_trial += infected_this_trial / num_days
         for index, was_infected in enumerate(infected_once_this_trial):
             infected_at_least_once_counts[index] += was_infected
 
@@ -55,13 +55,44 @@ def run_monte_carlo(num_trials, network_size, p, num_infect, num_days, max_repai
     return avg_days_to_eradicate, avg_infected_per_trial, prob_infected_at_least_once
 
 
-# Parameters
-num_trials = 10000
-network_size = 20
-p = 0.1
-num_infect = 1
-num_days = 10
-max_repair = 5
+while True:
+    print('Welcome: Please enter valid entries or "quit" or "q" to quit')
+    num_trials = 10000
+
+    network_input = input("Enter Number of Computers in the network: ")
+    if network_input.lower() in ["quit", "q"]:
+        break
+    network_size = int(network_input) 
+
+    p_input = input('Enter Probability of computer getting infected (must be < 1): ')
+    if p_input.lower() in ["quit", "q"]:
+        break
+    p = float(p_input)
+    if p >= 1:
+        print('Error: Please Enter a number less than 1.')
+        continue
+
+    infect_input = input('Enter number of Computers infected: ')
+    if infect_input.lower() in ["quit", "q"]:
+        break
+    num_infect = int(infect_input)
+    if num_infect > network_size:
+        print('Error: Number of infected cannot be greater than network size.')
+        continue
+
+    days_input = input('Enter Number of Days: ')
+    if days_input.lower() in ["quit", "q"]:
+        break
+    num_days = int(days_input)
+
+    repair_input = input('Enter Number repaired a day: ')
+    if repair_input.lower() in ["quit", "q"]:
+        break
+    max_repair = int(repair_input)
+
+    break
+
+
 
 # Run Monte Carlo Simulation
 avg_days_to_eradicate, avg_infected_per_trial, prob_infected_once = run_monte_carlo(num_trials, network_size, p, num_infect, num_days, max_repair)
